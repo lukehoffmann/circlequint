@@ -1,0 +1,9 @@
+C:\Users\Luke\Source\QuintusTest\bin\QuintusTest.dll.config
+C:\Users\Luke\Source\QuintusTest\bin\QuintusTest.dll
+C:\Users\Luke\Source\QuintusTest\bin\QuintusTest.pdb
+C:\Users\Luke\Source\QuintusTest\bin\QuintusTest.xml
+C:\Users\Luke\Source\QuintusTest\obj\Debug\QuintusTest.Resources.resources
+C:\Users\Luke\Source\QuintusTest\obj\Debug\QuintusTest.vbproj.GenerateResource.Cache
+C:\Users\Luke\Source\QuintusTest\obj\Debug\QuintusTest.dll
+C:\Users\Luke\Source\QuintusTest\obj\Debug\QuintusTest.xml
+C:\Users\Luke\Source\QuintusTest\obj\Debug\QuintusTest.pdb
