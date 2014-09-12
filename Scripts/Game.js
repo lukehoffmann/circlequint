@@ -1,6 +1,6 @@
 ﻿var columns = 3,
         rows = 6,
-        pieceSize = 25, //px
+        pieceSize = 70, //px
         colors = ['red', 'orange', 'pink', 'purple'],
         minimumMatch = 3;
 
@@ -47,23 +47,64 @@ Q.scene("gameboard", function (stage) {
         asset: "Tree.png",
         x: Q.el.width / 2,
         y: Q.el.height / 2,
-        type: Q.SPRITE_NONE
+        type: Q.SPRITE_NONE,
     }));
 
-    var pieces = [];
+    var pieces = {
+        _p: [],
+
+        piece: function (c, r) {
+            if (this._p[c] && this._p[c][r]) {
+                return this._p[c][r];
+            } else {
+                return null;
+            }
+        },
+
+        insert: function (c, r, piece) {
+            if (!this._p[c]) {
+                this._p[c] = [];
+            }
+            this._p[c][r] = piece;
+        },
+
+        clear: function (c, r) {
+            this._p[c][r] = null;
+        }
+    };
 
     var destroyPiece = function (piece) {
-        piece.destroy();
-        pieces[piece.p.column][piece.p.row] = null;
+        destroyColor(piece);
         dropColumns();
     };
     
+    var destroyColor = function (piece, color) {
+        color = color || piece.p.color;
+
+        if (piece && piece.p.color === color) {
+            var c = piece.p.column,
+                r = piece.p.row,
+                score = 1;
+            piece.destroy();
+            pieces.clear(piece.p.column, piece.p.row);
+            
+            if (pieces.piece(c, r - 1)) {score += destroyColor(pieces.piece(c, r - 1), color);}
+            if (pieces.piece(c, r + 1)) {score += destroyColor(pieces.piece(c, r + 1), color);}
+            if (pieces.piece(c - 1, r)) {score += destroyColor(pieces.piece(c - 1, r), color);}
+            if (pieces.piece(c + 1, r)) {score += destroyColor(pieces.piece(c + 1, r), color);}
+    
+            return score;
+        } else {
+            return 0;
+        }
+    };
+
     var dropColumns = function() {
         var c, r;
         for (c = 0; c < columns; c++) { //each colun
             for (r = rows - 1; r >= 0; r--) { //start from the bottom up
-                if (!pieces[c][r]) {
-                    pieces[c][r] = pieceAbove(c, r).moveTo(c, r);
+                if (!pieces.piece(c, r)) {
+                    pieces.insert(c, r, pieceAbove(c, r).moveTo(c, r));
                 }
             }
         }
@@ -72,9 +113,9 @@ Q.scene("gameboard", function (stage) {
     var pieceAbove = function(column, row) {
         var r, p;
         for (r = row; r >= 0; r--) {
-            if (pieces[column][r]) {
-                p = pieces[column][r];
-                pieces[column][r] = null;
+            if (pieces.piece(column, r)) {
+                p = pieces.piece(column, r);
+                pieces.clear(column, r);
                 return p;
             }
         }
@@ -91,9 +132,8 @@ Q.scene("gameboard", function (stage) {
 
     var c, r;
     for (c = 0; c < columns; c++) {
-        pieces[c] = [];
         for (r = 0; r < rows; r++) {
-            pieces[c][r] = newPiece().moveTo(c, r);
+            pieces.insert(c, r, newPiece().moveTo(c, r));
         }
     }
     
@@ -106,21 +146,3 @@ Q.load(["Tree.png", "red.png"], function () {
 var randomColor = function () {
     return colors[Math.floor(Math.random() * (colors.length - 0.9))];
 };
-
-//var addClassToAdjacentPieces = function (div, newClass, color) {
-//    color = color || div.data('color');
-
-//    if (div && div.data('color') === color && !div.hasClass(newClass)) {
-//        var c = +piecePos(div).column,
-//            r = +piecePos(div).row;
-
-//        div.addClass(newClass);
-//        return 1
-//        + addClassToAdjacentPieces(getPiece(c, r - 1), newClass, color)
-//        + addClassToAdjacentPieces(getPiece(c, r + 1), newClass, color)
-//        + addClassToAdjacentPieces(getPiece(c - 1, r), newClass, color)
-//        + addClassToAdjacentPieces(getPiece(c + 1, r), newClass, color);
-//    } else {
-//        return 0;
-//    }
-//};
