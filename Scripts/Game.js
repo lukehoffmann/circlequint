@@ -1,6 +1,6 @@
 ﻿var columns = 3,
         rows = 6,
-        pieceSize = 100, //px
+        pieceSize = 25, //px
         colors = ['red', 'orange', 'pink', 'purple'],
         minimumMatch = 3;
 
@@ -29,17 +29,20 @@ Q.Sprite.extend("Piece", {
         ctx.fill();
     },
     
-    touch: function () { this.p.destroyPiece(this); },
-
-    drop: function () {
-        console.log(this.p.y);
-        this.p.y += pieceSize;
-        console.log(this.p.y);
+    touch: function () {
+        this.p.destroyPiece(this);
+    },
+    
+    moveTo: function(column, row) {
+        this.p.column = column;
+        this.p.row = row;
+        this.p.x = pieceSize * column + pieceSize / 2;
+        this.p.y = pieceSize * row + pieceSize / 2;
+        return this;
     }
 });
 
 Q.scene("gameboard", function (stage) {
-    Q.gravity = 1;
     stage.insert(new Q.Sprite({
         asset: "Tree.png",
         x: Q.el.width / 2,
@@ -51,29 +54,52 @@ Q.scene("gameboard", function (stage) {
 
     var destroyPiece = function (piece) {
         var column = piece.p.column,
-            row = piece.p.row, 
-            r;
-        //pieces[column][row] = null;
+            row = piece.p.row,
+            c;
         piece.destroy();
+        pieces[column][row] = null;
 
-        for (r = row; r > 0; r--) {
-            pieces[column][r - 1].drop();
+        dropColumns();
+    };
+    
+    var dropColumns = function() {
+        var c, r;
+        for (c = 0; c < columns; c++) { //each colun
+            for (r = rows - 1; r >= 0; r--) { //start from the bottom up
+                if (!pieces[c][r]) {
+                    console.log('movePieceDownTo ' + c + ' ' + r);
+                    movePieceDownTo(c, r);
+                }
+            }
         }
     };
 
-    var c, r;
-    for (c = 0; c <= columns - 1; c++) {
-        pieces[c] = [];
-        for (r = 0; r <= rows - 1; r++) {
-            pieces[c][r] = stage.insert(new Q.Piece({
+    var movePieceDownTo = function(column, row) {
+        var r;
+        for (r = row; r >= 0; r--) {
+            if (pieces[column][r]) {
+                console.log('getting from ' + column + ' ' + r);
+                pieces[column][row] = pieces[column][r].moveTo(column, row);
+                pieces[column][r] = null;
+                return;
+            }
+        }
+        pieces[column][row] = newPiece().moveTo(column, row);
+    };
+
+    var newPiece = function () {
+        return stage.insert(new Q.Piece({
                 color: randomColor(),
-                column: c,
-                row: r,
-                x: pieceSize * c + pieceSize / 2,
-                y: pieceSize * r + pieceSize / 2,
                 destroyPiece: destroyPiece,
                 type: Q.SPRITE_FRIENDLY
             }));
+    };
+
+    var c, r;
+    for (c = 0; c < columns; c++) {
+        pieces[c] = [];
+        for (r = 0; r < rows; r++) {
+            pieces[c][r] = newPiece().moveTo(c, r);
         }
     }
     
