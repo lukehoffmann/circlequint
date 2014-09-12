@@ -53,12 +53,8 @@ Q.scene("gameboard", function (stage) {
     var pieces = [];
 
     var destroyPiece = function (piece) {
-        var column = piece.p.column,
-            row = piece.p.row,
-            c;
         piece.destroy();
-        pieces[column][row] = null;
-
+        pieces[piece.p.column][piece.p.row] = null;
         dropColumns();
     };
     
@@ -67,24 +63,22 @@ Q.scene("gameboard", function (stage) {
         for (c = 0; c < columns; c++) { //each colun
             for (r = rows - 1; r >= 0; r--) { //start from the bottom up
                 if (!pieces[c][r]) {
-                    console.log('movePieceDownTo ' + c + ' ' + r);
-                    movePieceDownTo(c, r);
+                    pieces[c][r] = pieceAbove(c, r).moveTo(c, r);
                 }
             }
         }
     };
 
-    var movePieceDownTo = function(column, row) {
-        var r;
+    var pieceAbove = function(column, row) {
+        var r, p;
         for (r = row; r >= 0; r--) {
             if (pieces[column][r]) {
-                console.log('getting from ' + column + ' ' + r);
-                pieces[column][row] = pieces[column][r].moveTo(column, row);
+                p = pieces[column][r];
                 pieces[column][r] = null;
-                return;
+                return p;
             }
         }
-        pieces[column][row] = newPiece().moveTo(column, row);
+        return newPiece();
     };
 
     var newPiece = function () {
