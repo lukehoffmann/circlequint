@@ -82,10 +82,10 @@
     <Import Include="System.Web.UI.HtmlControls" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Game.js" />
+    <Content Include="Scripts\Game.js" />
     <Content Include="images\Tree.png" />
     <Content Include="Index.html" />
-    <Content Include="quintus-all.js" />
+    <Content Include="Scripts\quintus-all.js" />
     <None Include="Scripts\_references.js" />
     <Content Include="images\orange.png" />
     <Content Include="images\pink.png" />
