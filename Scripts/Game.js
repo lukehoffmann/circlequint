@@ -1,25 +1,48 @@
-﻿var columns = 3,
+﻿
+var columns = 3,
         rows = 6,
         pieceSize = 70, //px
         colors = ['red', 'orange', 'pink', 'purple'],
         minimumMatch = 3;
 
 var Q = Quintus()
-    .include("Sprites, Scenes, Touch")
+    .include("Sprites, Scenes, Touch, 2D")
     .setup({
         width: columns * pieceSize,
         height: rows * pieceSize
     });
 
-Q.touch(Q.SPRITE_FRIENDLY);
+Q.SPRITE_PIECE = 21;
+Q.SPRITE_BOUND = 22;
+
+Q.touch(Q.SPRITE_PIECE);
+
+Q.Sprite.extend("Bound", {
+    init: function (p) {
+        this._super(p, {
+            type: Q.SPRITE_PIECE,
+            color: 'white',
+            w: pieceSize * columns,
+            h: 20
+        });
+    },
+
+    draw: function (ctx) {
+        ctx.fillStyle = this.p.color;
+        // Draw a filled rectangle centered at 0,0 (i.e. from -w/2,-h2 to w/2, h/2)
+        ctx.fillRect(-this.p.cx, -this.p.cy, this.p.w, this.p.h);
+    }
+});
 
 Q.Sprite.extend("Piece", {
     init: function (p) {
         this._super(p, {
+            type: Q.SPRITE_PIECE,
             w: pieceSize,
             h: pieceSize
         });
         this.on('touch');
+        this.add("2d");
     },
     
     draw: function (ctx) {
@@ -36,8 +59,6 @@ Q.Sprite.extend("Piece", {
     moveTo: function(column, row) {
         this.p.column = column;
         this.p.row = row;
-        this.p.x = pieceSize * column + pieceSize / 2;
-        this.p.y = pieceSize * row + pieceSize / 2;
         return this;
     }
 });
@@ -129,23 +150,37 @@ Q.scene("gameboard", function (stage) {
                 return p;
             }
         }
-        return newPiece();
-    };
-
-    var newPiece = function () {
-        return stage.insert(new Q.Piece({
+        return stage.insert(
+            new Q.Piece({
                 color: randomColor(),
                 onTouch: destroyPiece,
-                type: Q.SPRITE_FRIENDLY
-            }));
+                column: column,
+                row: row,
+                x: pieceSize * c + pieceSize / 2,
+                y: -pieceSize * row
+            })
+        );
     };
 
     var c, r;
     for (c = 0; c < columns; c++) {
         for (r = 0; r < rows; r++) {
-            pieces.insert(c, r, newPiece().moveTo(c, r));
+            pieces.insert(c, r,
+                stage.insert(new Q.Piece({
+                    color: randomColor(),
+                    onTouch: destroyPiece,
+                    column: c,
+                    row: r,
+                    x: pieceSize * c + pieceSize / 2,
+                    y: pieceSize * r + pieceSize / 2
+                }))
+            );
         }
     }
+    stage.insert(new Q.Bound({
+        y: (pieceSize * rows) + 10,
+        x: (pieceSize * columns) / 2
+    }));
     
 });
 
