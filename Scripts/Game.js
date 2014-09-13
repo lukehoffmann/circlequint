@@ -30,7 +30,7 @@ Q.Sprite.extend("Piece", {
     },
     
     touch: function () {
-        this.p.destroyPiece(this);
+        this.p.onTouch(this);
     },
     
     moveTo: function(column, row) {
@@ -53,8 +53,12 @@ Q.scene("gameboard", function (stage) {
     var pieces = {
         _p: [],
 
+        exists: function (c, r) {
+            return this._p[c] && this._p[c][r];
+        },
+
         piece: function (c, r) {
-            if (this._p[c] && this._p[c][r]) {
+            if (this.exists(c, r)) {
                 return this._p[c][r];
             } else {
                 return null;
@@ -74,36 +78,42 @@ Q.scene("gameboard", function (stage) {
     };
 
     var destroyPiece = function (piece) {
-        destroyColor(piece);
+        var match = [], m;
+        adjacentMatch(piece.p.column, piece.p.row, match);
+        if (match.length >= minimumMatch) {
+            for (m = match.length - 1; m >= 0; m--) {
+                match[m].destroy();
+                pieces.clear(match[m].p.column, match[m].p.row);
+            }
+        }
+            
         dropColumns();
     };
     
-    var destroyColor = function (piece, color) {
-        color = color || piece.p.color;
-
-        if (piece && piece.p.color === color) {
-            var c = piece.p.column,
-                r = piece.p.row,
-                score = 1;
-            piece.destroy();
-            pieces.clear(piece.p.column, piece.p.row);
-            
-            if (pieces.piece(c, r - 1)) {score += destroyColor(pieces.piece(c, r - 1), color);}
-            if (pieces.piece(c, r + 1)) {score += destroyColor(pieces.piece(c, r + 1), color);}
-            if (pieces.piece(c - 1, r)) {score += destroyColor(pieces.piece(c - 1, r), color);}
-            if (pieces.piece(c + 1, r)) {score += destroyColor(pieces.piece(c + 1, r), color);}
-    
-            return score;
-        } else {
-            return 0;
+    var adjacentMatch = function (column, row, match, color) {
+                    
+        if (pieces.exists(column, row)) {
+            var piece = pieces.piece(column, row);
+            color = color || piece.p.color;
+        
+            if (piece && piece.p.color === color) {
+                if (match.indexOf(piece) < 0) {
+                    match.push(piece);
+                    adjacentMatch(column, row - 1, match, color);
+                    adjacentMatch(column, row + 1, match, color);
+                    adjacentMatch(column - 1, row, match, color);
+                    adjacentMatch(column + 1, row, match, color);
+                }
+            }
         }
+       return match;
     };
 
     var dropColumns = function() {
         var c, r;
         for (c = 0; c < columns; c++) { //each colun
             for (r = rows - 1; r >= 0; r--) { //start from the bottom up
-                if (!pieces.piece(c, r)) {
+                if (!pieces.exists(c, r)) {
                     pieces.insert(c, r, pieceAbove(c, r).moveTo(c, r));
                 }
             }
@@ -113,7 +123,7 @@ Q.scene("gameboard", function (stage) {
     var pieceAbove = function(column, row) {
         var r, p;
         for (r = row; r >= 0; r--) {
-            if (pieces.piece(column, r)) {
+            if (pieces.exists(column, r)) {
                 p = pieces.piece(column, r);
                 pieces.clear(column, r);
                 return p;
@@ -125,7 +135,7 @@ Q.scene("gameboard", function (stage) {
     var newPiece = function () {
         return stage.insert(new Q.Piece({
                 color: randomColor(),
-                destroyPiece: destroyPiece,
+                onTouch: destroyPiece,
                 type: Q.SPRITE_FRIENDLY
             }));
     };
